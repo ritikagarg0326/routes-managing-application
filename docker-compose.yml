@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: "5000"
+      DATABASE_URL: "sqlite:////app/data/logistics.db"
+    volumes:
+      - app-data:/app/data
+
+volumes:
+  app-data:

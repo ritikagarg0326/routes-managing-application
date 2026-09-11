@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block title %}Supplier Management{% endblock %}
+{% block content %}
+<div class="panel"><h2>Add Supplier</h2><form method="post" class="formgrid">
+<input name="name" placeholder="Supplier name" required><input name="manager" placeholder="Manager">
+<input name="phone" placeholder="Phone"><button>Add Supplier</button></form></div>
+<div class="panel"><h2>Suppliers</h2><table><tr><th>Name</th><th>Manager</th><th>Phone</th><th>Status</th></tr>
+{% for x in suppliers %}<tr><td>{{ x.name }}</td><td>{{ x.manager }}</td><td>{{ x.phone }}</td><td>{{ x.status }}</td></tr>{% endfor %}</table></div>
+{% endblock %}

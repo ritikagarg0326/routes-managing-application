@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block title %}Product Management{% endblock %}
+{% block content %}
+<div class="panel"><h2>Add Product</h2><form method="post" class="formgrid">
+<input name="name" placeholder="Product name" required><input name="sku" placeholder="SKU" required>
+<input name="quantity" type="number" placeholder="Quantity">
+<select name="supplier_id"><option value="">Supplier</option>{% for s in suppliers %}<option value="{{s.id}}">{{s.name}}</option>{% endfor %}</select>
+<button>Add Product</button></form></div>
+<div class="panel"><h2>Products</h2><table><tr><th>Product</th><th>SKU</th><th>Quantity</th><th>Supplier</th></tr>
+{% for x in products %}<tr><td>{{ x.name }}</td><td>{{ x.sku }}</td><td>{{ x.quantity }}</td><td>{{ x.supplier.name if x.supplier else "-" }}</td></tr>{% endfor %}</table></div>
+{% endblock %}
