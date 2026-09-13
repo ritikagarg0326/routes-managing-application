@@ -1,13 +1,28 @@
 services:
+
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: logistics-app
     ports:
       - "5000:5000"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16
+    container_name: logistics-postgres
     environment:
-      PORT: "5000"
-      DATABASE_URL: "sqlite:////app/data/logistics.db"
+      POSTGRES_DB: logistics
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
     volumes:
-      - app-data:/app/data
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  app-data:
+  postgres_data:
