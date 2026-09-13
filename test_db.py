@@ -8,6 +8,6 @@ conn = psycopg.connect(
     password="postgres"
 )
 
-print("Connected to PostgreSQL!")
+print("Connected to PostgreSQL! local")
 
 conn.close()
