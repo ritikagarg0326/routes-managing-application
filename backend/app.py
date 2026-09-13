@@ -2,8 +2,9 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, redirect, render_template, request, url_for
+from flask_migrate import Migrate
 
-from models import db, Supplier, Truck, Product, Route, Ticket
+from backend.models import db, Supplier, Truck, Product, Route, Ticket
 
 
 # =========================================================
@@ -76,7 +77,11 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Connect SQLAlchemy with Flask
 db.init_app(app)
 
-
+migrate = Migrate(
+    app,
+    db,
+    directory="database/migrations"
+)
 # =========================================================
 # DASHBOARD
 # =========================================================
