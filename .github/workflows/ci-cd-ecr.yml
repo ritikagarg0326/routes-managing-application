@@ -29,7 +29,7 @@ jobs:
         run: |
           docker build \
             -t dev/ecr_routes:latest \
-            ./backend
+            -f backend/Dockerfile .
 
       - name: Tag Docker image
         run: |
