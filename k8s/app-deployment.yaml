@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: logistics-app
+  namespace: logistics
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: logistics-app
+
+  template:
+    metadata:
+      labels:
+        app: logistics-app
+
+    spec:
+      containers:
+        - name: logistics-app
+
+          image: logiops-devops-project-app:latest
+
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 5000
+          readinessProbe:
+              httpGet:
+                path: /health
+                port: 5000
+              initialDelaySeconds: 5
+              periodSeconds: 10
+
+          livenessProbe:
+                httpGet:
+                  path: /health
+                  port: 5000
+                initialDelaySeconds: 15
+                periodSeconds: 20
+
+          env:
+            - name: DB_HOST
+              value: postgres
+
+            - name: DB_PORT
+              value: "5432"
+
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB
+
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+
+          envFrom:
+            - configMapRef:
+                name: logistics-config
