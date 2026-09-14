@@ -28,15 +28,15 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
-            -t dev/ecr_routes:latest \
+            -t logistics-app:latest \
             -f backend/Dockerfile .
 
       - name: Tag Docker image
         run: |
-          docker tag dev/ecr_routes:latest \
-            ${{ steps.login-ecr.outputs.registry }}/dev/ecr_routes:latest
+          docker tag logistics-app:latest \
+            ${{ steps.login-ecr.outputs.registry }}/logistics-app:latest
 
       - name: Push Docker image to ECR
         run: |
           docker push \
-            ${{ steps.login-ecr.outputs.registry }}/dev/ecr_routes:latest
+            ${{ steps.login-ecr.outputs.registry }}/logistics-app:latest
