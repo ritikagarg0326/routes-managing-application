@@ -97,3 +97,6 @@ Jira remains the work-management system. A typical ticket lifecycle is:
 Jira ticket -> developer change -> GitHub PR -> GitHub Actions -> ECR -> ECS -> validation -> Jira update.
 
 This demo provides local ticket tracking so the workflow can be demonstrated without requiring a Jira account. A production version can integrate the Jira REST API.
+
+
+eks cluster validated
