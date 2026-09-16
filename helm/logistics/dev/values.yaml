@@ -1,0 +1,19 @@
+replicaCount: 1
+
+image:
+  repository: logiops-devops-project-app
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 5000
+
+environment: development
+
+postgres:
+  image: postgres:16
+  port: 5432
+  database: logistics
+  username: postgres
+  password: postgres
