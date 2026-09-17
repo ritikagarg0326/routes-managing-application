@@ -1,14 +1,60 @@
+# ============================================================
+# VPC ARCHITECTURE
+#
+# VPC
+# ├── Public Subnets
+# ├── Private Subnets
+# ├── Internet Gateway
+# ├── Public Route Table
+# ├── NAT Gateway
+# ├── Elastic IP
+# ├── Private Route Table
+# └── Route Table Associations
+#
+# Traffic Flow:
+#
+# Public Subnet
+#      ↓
+# Public Route Table
+#      ↓
+# Internet Gateway
+#      ↓
+# Internet
+#
+# Private Subnet
+#      ↓
+# Private Route Table
+#      ↓
+# NAT Gateway
+#      ↓
+# Public Subnet
+#      ↓
+# Internet Gateway
+#      ↓
+# Internet
+#
+# ============================================================
+
+
+# ============================================================
+# VPC
+# ============================================================
+
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
   enable_dns_support   = true
+  enable_dns_hostnames = true
 
   tags = {
     Name = "${var.project_name}-vpc"
   }
 }
 
-# Internet Gateway
+
+# ============================================================
+# INTERNET GATEWAY
+# ============================================================
+
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
@@ -17,7 +63,11 @@ resource "aws_internet_gateway" "main" {
   }
 }
 
-# Public Subnet 1
+
+# ============================================================
+# PUBLIC SUBNETS
+# ============================================================
+
 resource "aws_subnet" "public_1" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
@@ -29,7 +79,6 @@ resource "aws_subnet" "public_1" {
   }
 }
 
-# Public Subnet 2
 resource "aws_subnet" "public_2" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.2.0/24"
@@ -41,7 +90,11 @@ resource "aws_subnet" "public_2" {
   }
 }
 
-# Private Subnet 1
+
+# ============================================================
+# PRIVATE SUBNETS
+# ============================================================
+
 resource "aws_subnet" "private_1" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.101.0/24"
@@ -52,7 +105,6 @@ resource "aws_subnet" "private_1" {
   }
 }
 
-# Private Subnet 2
 resource "aws_subnet" "private_2" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.102.0/24"
@@ -61,4 +113,101 @@ resource "aws_subnet" "private_2" {
   tags = {
     Name = "${var.project_name}-private-2"
   }
+}
+
+
+# ============================================================
+# PUBLIC ROUTE TABLE
+# ============================================================
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id
+  }
+
+  tags = {
+    Name = "${var.project_name}-public-rt"
+  }
+}
+
+
+# ============================================================
+# PUBLIC ROUTE TABLE ASSOCIATIONS
+# ============================================================
+
+resource "aws_route_table_association" "public_1" {
+  subnet_id      = aws_subnet.public_1.id
+  route_table_id = aws_route_table.public.id
+}
+
+resource "aws_route_table_association" "public_2" {
+  subnet_id      = aws_subnet.public_2.id
+  route_table_id = aws_route_table.public.id
+}
+
+
+# ============================================================
+# ELASTIC IP FOR NAT
+# ============================================================
+
+resource "aws_eip" "nat" {
+  domain = "vpc"
+
+  tags = {
+    Name = "${var.project_name}-nat-eip"
+  }
+}
+
+
+# ============================================================
+# NAT GATEWAY
+# ============================================================
+
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public_1.id
+
+  depends_on = [
+    aws_internet_gateway.main
+  ]
+
+  tags = {
+    Name = "${var.project_name}-nat"
+  }
+}
+
+
+# ============================================================
+# PRIVATE ROUTE TABLE
+# ============================================================
+
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main.id
+  }
+
+  tags = {
+    Name = "${var.project_name}-private-rt"
+  }
+}
+
+
+# ============================================================
+# PRIVATE ROUTE TABLE ASSOCIATIONS
+# ============================================================
+
+resource "aws_route_table_association" "private_1" {
+  subnet_id      = aws_subnet.private_1.id
+  route_table_id = aws_route_table.private.id
+}
+
+resource "aws_route_table_association" "private_2" {
+  subnet_id      = aws_subnet.private_2.id
+  route_table_id = aws_route_table.private.id
 }

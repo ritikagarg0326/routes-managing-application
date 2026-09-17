@@ -1,0 +1,102 @@
+# ============================================================
+# IAM ARCHITECTURE
+#
+# EKS Control Plane
+#       ↓
+# EKS Cluster IAM Role
+#       ↓
+# AWS EKS permissions
+#
+# EKS Worker Nodes
+#       ↓
+# Node IAM Role
+#       ↓
+# EC2 / ECR / CNI permissions
+#
+# ============================================================
+
+
+# ============================================================
+# EKS CLUSTER ROLE
+# ============================================================
+
+resource "aws_iam_role" "eks_cluster" {
+  name = "${var.project_name}-eks-cluster-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+
+    Statement = [
+      {
+        Effect = "Allow"
+
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = {
+    Name = "${var.project_name}-eks-cluster-role"
+  }
+}
+
+
+# EKS Cluster Policy
+resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
+  role       = aws_iam_role.eks_cluster.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+}
+
+
+# ============================================================
+# EKS NODE ROLE
+# ============================================================
+
+resource "aws_iam_role" "eks_node" {
+  name = "${var.project_name}-eks-node-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+
+    Statement = [
+      {
+        Effect = "Allow"
+
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = {
+    Name = "${var.project_name}-eks-node-role"
+  }
+}
+
+
+# Worker Node Policy
+resource "aws_iam_role_policy_attachment" "eks_worker_node" {
+  role       = aws_iam_role.eks_node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+}
+
+
+# EKS CNI Policy
+resource "aws_iam_role_policy_attachment" "eks_cni" {
+  role       = aws_iam_role.eks_node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+}
+
+
+# ECR Read Only Policy
+resource "aws_iam_role_policy_attachment" "ecr_read_only" {
+  role       = aws_iam_role.eks_node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
