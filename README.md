@@ -100,3 +100,4 @@ This demo provides local ticket tracking so the workflow can be demonstrated wit
 
 
 eks cluster validated
+GITHUB ACTION WORKFLOW AUOTMATED TO BUILD TEST AND DEPLOY IN EKS CLUSTER

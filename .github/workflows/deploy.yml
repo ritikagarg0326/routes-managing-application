@@ -1,0 +1,113 @@
+name: Logistics CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: dev/logistics
+  EKS_CLUSTER_NAME: logistics-eks
+  HELM_RELEASE: logistics-prod
+  HELM_CHART: ./helm/logistics
+
+jobs:
+
+  # ==========================================================
+  # CI
+  # ==========================================================
+
+  build-and-push:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+
+      - name: Build Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
+            -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest \
+            .
+
+
+      - name: Push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
+
+
+  # ==========================================================
+  # CD
+  # ==========================================================
+
+  deploy-to-eks:
+
+    needs: build-and-push
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig \
+            --region $AWS_REGION \
+            --name $EKS_CLUSTER_NAME
+
+
+      - name: Verify EKS connection
+        run: |
+          kubectl get nodes
+
+
+      - name: Deploy Helm chart
+        run: |
+          helm upgrade --install $HELM_RELEASE $HELM_CHART \
+            -f $HELM_CHART/prod/values.yaml \
+            --set image.repository=470024785854.dkr.ecr.us-east-1.amazonaws.com/dev/logistics \
+            --set image.tag=latest \
+            --wait
+
+
+      - name: Verify application
+        run: |
+          kubectl get pods
+          kubectl get services
+          kubectl get deployments

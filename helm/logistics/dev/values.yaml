@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: logiops-devops-project-app
+  repository: 470024785854.dkr.ecr.us-east-1.amazonaws.com/dev/logistics
   tag: latest
   pullPolicy: IfNotPresent
 
