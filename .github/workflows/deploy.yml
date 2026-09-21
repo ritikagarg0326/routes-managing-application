@@ -93,6 +93,9 @@ jobs:
             --region $AWS_REGION \
             --name $EKS_CLUSTER_NAME
 
+      - name: Verify AWS identity
+        run: |
+          aws sts get-caller-identity
 
       - name: Verify EKS connection
         run: |
