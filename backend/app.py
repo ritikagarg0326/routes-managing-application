@@ -1,10 +1,13 @@
 import os
+import time
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, redirect, render_template, request, url_for
 from flask_migrate import Migrate
 
 from backend.models import db, Supplier, Truck, Product, Route, Ticket
+
+from prometheus_client import Counter, Histogram, generate_latest
 
 
 # =========================================================
@@ -51,11 +54,13 @@ required_variables = {
     "DB_PASSWORD": DB_PASSWORD
 }
 
+
 missing_variables = [
     name
     for name, value in required_variables.items()
     if not value
 ]
+
 
 if missing_variables:
     raise RuntimeError(
@@ -74,7 +79,10 @@ app.config["SQLALCHEMY_DATABASE_URI"] = (
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 
-# Connect SQLAlchemy with Flask
+# =========================================================
+# CONNECT SQLALCHEMY WITH FLASK
+# =========================================================
+
 db.init_app(app)
 
 migrate = Migrate(
@@ -82,6 +90,78 @@ migrate = Migrate(
     db,
     directory="database/migrations"
 )
+
+
+# =========================================================
+# PROMETHEUS METRICS
+# =========================================================
+
+REQUEST_COUNT = Counter(
+    "flask_http_requests_total",
+    "Total number of HTTP requests",
+    ["method", "endpoint", "http_status"]
+)
+
+
+REQUEST_LATENCY = Histogram(
+    "flask_http_request_duration_seconds",
+    "HTTP request latency",
+    ["method", "endpoint"]
+)
+
+
+# =========================================================
+# PROMETHEUS REQUEST MONITORING
+# =========================================================
+
+@app.before_request
+def before_request():
+    """
+    Store the request start time so we can
+    calculate request latency.
+    """
+
+    request.start_time = time.time()
+
+
+@app.after_request
+def after_request(response):
+    """
+    Record request count and request latency
+    after every Flask request.
+    """
+
+    # Don't record the Prometheus scrape itself.
+    if request.path != "/metrics":
+
+        latency = time.time() - request.start_time
+
+        REQUEST_COUNT.labels(
+            method=request.method,
+            endpoint=request.endpoint or request.path,
+            http_status=response.status_code
+        ).inc()
+
+        REQUEST_LATENCY.labels(
+            method=request.method,
+            endpoint=request.endpoint or request.path
+        ).observe(latency)
+
+    return response
+
+
+# =========================================================
+# PROMETHEUS METRICS ENDPOINT
+# =========================================================
+
+@app.route("/metrics")
+def metrics():
+
+    return generate_latest(), 200, {
+        "Content-Type": "text/plain; version=0.0.4"
+    }
+
+
 # =========================================================
 # DASHBOARD
 # =========================================================
