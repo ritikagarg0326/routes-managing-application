@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: logiops-devops-project-app
-  tag: latest
+  tag: metrics-v1
   pullPolicy: IfNotPresent
 
 service:
