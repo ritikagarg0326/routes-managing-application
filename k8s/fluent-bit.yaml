@@ -8,7 +8,7 @@ data:
     [SERVICE]
         Flush         5
         Log_Level     info
-
+        Parsers_File  /fluent-bit/etc/parsers.conf
     [INPUT]
         Name              tail
         Path              /var/log/containers/*.log
