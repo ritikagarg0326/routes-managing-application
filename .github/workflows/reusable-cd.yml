@@ -1,0 +1,88 @@
+name: Reusable CD
+
+on:
+  workflow_call:
+
+    inputs:
+
+      aws-region:
+        required: true
+        type: string
+
+      ecr-repository:
+        required: true
+        type: string
+
+      eks-cluster-name:
+        required: true
+        type: string
+
+      helm-release:
+        required: true
+        type: string
+
+      helm-chart:
+        required: true
+        type: string
+
+      image-tag:
+        required: true
+        type: string
+
+      image-uri:
+        required: true
+        type: string
+
+    secrets:
+
+      AWS_ACCESS_KEY_ID:
+        required: true
+
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+
+jobs:
+
+  deploy-to-eks:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.aws-region }}
+
+      - name: Verify AWS identity
+        run: |
+          aws sts get-caller-identity
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig \
+            --region ${{ inputs.aws-region }} \
+            --name ${{ inputs.eks-cluster-name }}
+
+      - name: Verify EKS connection
+        run: |
+          kubectl get nodes
+
+      - name: Deploy Helm chart
+        run: |
+          helm upgrade --install ${{ inputs.helm-release }} ${{ inputs.helm-chart }} \
+            -f ${{ inputs.helm-chart }}/prod/values.yaml \
+            --set image.repository=$(echo "${{ inputs.image-uri }}" | cut -d: -f1) \
+            --set image.tag=${{ inputs.image-tag }} \
+            --wait
+
+      - name: Verify application
+        run: |
+          kubectl get pods
+          kubectl get services
+          kubectl get deployments
