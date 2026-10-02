@@ -1,7 +1,6 @@
 name: Logistics CI/CD
 
 on:
-
   push:
     branches:
       - main
@@ -14,30 +13,27 @@ permissions:
 jobs:
 
   CI:
-
     uses: ./.github/workflows/reusable-ci.yml
 
     with:
-      aws-region: ${{ vars.AWS_REGION }}
-      ecr-repository: ${{ vars.ECR_REPOSITORY }}
+      aws-region: "us-east-1"
+      ecr-repository: "dev/logistics"
 
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-
   CD:
-
     needs: CI
 
     uses: ./.github/workflows/reusable-cd.yml
 
     with:
-      aws-region: ${{ vars.AWS_REGION }}
-      ecr-repository: ${{ vars.ECR_REPOSITORY }}
-      eks-cluster-name: ${{ vars.EKS_CLUSTER_NAME }}
-      helm-release: ${{ vars.HELM_RELEASE }}
-      helm-chart: ${{ vars.HELM_CHART }}
+      aws-region: "us-east-1"
+      ecr-repository: "dev/logistics"
+      eks-cluster-name: "logistics-eks"
+      helm-release: "logistics"
+      helm-chart: "./helm/logistics"
 
       image-tag: ${{ needs.CI.outputs.image-tag }}
       image-uri: ${{ needs.CI.outputs.image-uri }}
