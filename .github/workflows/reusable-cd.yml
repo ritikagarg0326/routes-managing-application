@@ -191,4 +191,4 @@ jobs:
       # - name: Check deployment rollout
       #   run: |
       #     kubectl rollout status deployment/${{ inputs.helm-release }} \
-      #       --timeout=5m
+      #       --timeout=5mj
