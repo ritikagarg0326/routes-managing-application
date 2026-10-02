@@ -41,6 +41,7 @@ on:
       AWS_SECRET_ACCESS_KEY:
         required: true
 
+
 jobs:
 
   deploy-to-eks:
@@ -49,8 +50,17 @@ jobs:
 
     steps:
 
+      # ------------------------------------------------
+      # 1. Checkout repository
+      # ------------------------------------------------
+
       - name: Checkout repository
         uses: actions/checkout@v4
+
+
+      # ------------------------------------------------
+      # 2. Configure AWS credentials
+      # ------------------------------------------------
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -59,30 +69,126 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
 
+
+      # ------------------------------------------------
+      # 3. Verify AWS identity
+      # ------------------------------------------------
+
       - name: Verify AWS identity
         run: |
+          echo "AWS Region: ${{ inputs.aws-region }}"
+          echo "EKS Cluster: ${{ inputs.eks-cluster-name }}"
+          echo "ECR Repository: ${{ inputs.ecr-repository }}"
+
           aws sts get-caller-identity
+
+
+      # ------------------------------------------------
+      # 4. Verify EKS cluster exists
+      # ------------------------------------------------
+
+      - name: Verify EKS cluster
+        run: |
+          aws eks describe-cluster \
+            --region "${{ inputs.aws-region }}" \
+            --name "${{ inputs.eks-cluster-name }}" \
+            --query "cluster.status" \
+            --output text
+
+
+      # ------------------------------------------------
+      # 5. Configure kubectl
+      # ------------------------------------------------
 
       - name: Configure kubectl
         run: |
           aws eks update-kubeconfig \
-            --region ${{ inputs.aws-region }} \
-            --name ${{ inputs.eks-cluster-name }}
+            --region "${{ inputs.aws-region }}" \
+            --name "${{ inputs.eks-cluster-name }}"
+
+
+      # ------------------------------------------------
+      # 6. Verify kubectl context
+      # ------------------------------------------------
+
+      - name: Verify kubectl context
+        run: |
+          kubectl config current-context
+
+
+      # ------------------------------------------------
+      # 7. Verify EKS access
+      # ------------------------------------------------
 
       - name: Verify EKS connection
         run: |
           kubectl get nodes
 
+
+      # ------------------------------------------------
+      # 8. Verify Helm
+      # ------------------------------------------------
+
+      - name: Verify Helm
+        run: |
+          helm version
+
+
+      # ------------------------------------------------
+      # 9. Verify Helm chart
+      # ------------------------------------------------
+
+      - name: Validate Helm chart
+        run: |
+          helm lint "${{ inputs.helm-chart }}"
+
+
+      # ------------------------------------------------
+      # 10. Deploy application
+      # ------------------------------------------------
+
       - name: Deploy Helm chart
         run: |
-          helm upgrade --install ${{ inputs.helm-release }} ${{ inputs.helm-chart }} \
-            -f ${{ inputs.helm-chart }}/prod/values.yaml \
-            --set image.repository=$(echo "${{ inputs.image-uri }}" | cut -d: -f1) \
-            --set image.tag=${{ inputs.image-tag }} \
-            --wait
+          helm upgrade --install \
+            "${{ inputs.helm-release }}" \
+            "${{ inputs.helm-chart }}" \
+            -f "${{ inputs.helm-chart }}/dev/values.yaml" \
+            --set image.repository="$(echo '${{ inputs.image-uri }}' | cut -d: -f1)" \
+            --set image.tag="${{ inputs.image-tag }}" \
+            --wait \
+            --timeout 5m
+
+
+      # ------------------------------------------------
+      # 11. Verify Helm release
+      # ------------------------------------------------
+
+      - name: Verify Helm release
+        run: |
+          helm list
+
+
+      # ------------------------------------------------
+      # 12. Verify Kubernetes resources
+      # ------------------------------------------------
 
       - name: Verify application
         run: |
-          kubectl get pods
+          echo "===== PODS ====="
+          kubectl get pods -o wide
+
+          echo "===== SERVICES ====="
           kubectl get services
+
+          echo "===== DEPLOYMENTS ====="
           kubectl get deployments
+
+
+      # ------------------------------------------------
+      # 13. Check rollout status
+      # ------------------------------------------------
+
+      # - name: Check deployment rollout
+      #   run: |
+      #     kubectl rollout status deployment/${{ inputs.helm-release }} \
+      #       --timeout=5m
