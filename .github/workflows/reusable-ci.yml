@@ -5,11 +5,11 @@ on:
     inputs:
       aws-region:
         required: true
-        type: us-east-1
+        type: string
 
       ecr-repository:
         required: true
-        type: dev/logistics
+        type: string
 
     secrets:
       AWS_ACCESS_KEY_ID:
