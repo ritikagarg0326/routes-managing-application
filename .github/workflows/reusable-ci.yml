@@ -29,13 +29,27 @@ jobs:
 
     steps:
 
+      # ------------------------------------------------
+      # 1. Checkout repository
+      # ------------------------------------------------
+
       - name: Checkout repository
         uses: actions/checkout@v4
+
+
+      # ------------------------------------------------
+      # 2. Check inputs
+      # ------------------------------------------------
 
       - name: Check inputs
         run: |
           echo "AWS Region: '${{ inputs.aws-region }}'"
           echo "ECR Repository: '${{ inputs.ecr-repository }}'"
+
+
+      # ------------------------------------------------
+      # 3. Configure AWS credentials
+      # ------------------------------------------------
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -44,9 +58,28 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
 
+
+      # ------------------------------------------------
+      # 4. Verify AWS identity
+      # ------------------------------------------------
+
+      - name: Verify AWS identity
+        run: |
+          aws sts get-caller-identity
+
+
+      # ------------------------------------------------
+      # 5. Login to Amazon ECR
+      # ------------------------------------------------
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+
+
+      # ------------------------------------------------
+      # 6. Set image information
+      # ------------------------------------------------
 
       - name: Set image information
         id: image-info
@@ -54,8 +87,19 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ inputs.ecr-repository }}
         run: |
-          echo "image-tag=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-          echo "image-uri=${ECR_REGISTRY}/${ECR_REPOSITORY}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          IMAGE_TAG="${GITHUB_SHA}"
+          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+
+          echo "image-tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "image-uri=${IMAGE_URI}" >> "$GITHUB_OUTPUT"
+
+          echo "Image tag: ${IMAGE_TAG}"
+          echo "Image URI: ${IMAGE_URI}"
+
+
+      # ------------------------------------------------
+      # 7. Build Docker image
+      # ------------------------------------------------
 
       - name: Build Docker image
         env:
@@ -64,9 +108,14 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:latest" \
             -f backend/Dockerfile .
+
+
+      # ------------------------------------------------
+      # 8. Push Docker image
+      # ------------------------------------------------
 
       - name: Push Docker image
         env:
@@ -74,5 +123,5 @@ jobs:
           ECR_REPOSITORY: ${{ inputs.ecr-repository }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"

@@ -84,7 +84,7 @@ jobs:
 
 
       # ------------------------------------------------
-      # 4. Verify EKS cluster exists
+      # 4. Verify EKS cluster
       # ------------------------------------------------
 
       - name: Verify EKS cluster
@@ -135,60 +135,126 @@ jobs:
 
 
       # ------------------------------------------------
-      # 9. Verify Helm chart
+      # 9. Validate Helm chart
       # ------------------------------------------------
 
       - name: Validate Helm chart
         run: |
-          helm lint "${{ inputs.helm-chart }}"
+          helm lint "${{ inputs.helm-chart }}" \
+            -f "${{ inputs.helm-chart }}/values.yaml"
 
 
       # ------------------------------------------------
-      # 10. Deploy application
+      # 10. Verify CI image values
+      # ------------------------------------------------
+
+      - name: Verify image inputs
+        run: |
+          echo "======================================"
+          echo "IMAGE INFORMATION"
+          echo "======================================"
+          echo "Image Tag:"
+          echo "${{ inputs.image-tag }}"
+          echo ""
+          echo "Image URI:"
+          echo "${{ inputs.image-uri }}"
+          echo "======================================"
+
+          if [ -z "${{ inputs.image-tag }}" ]; then
+            echo "ERROR: image-tag is empty"
+            exit 1
+          fi
+
+          if [ -z "${{ inputs.image-uri }}" ]; then
+            echo "ERROR: image-uri is empty"
+            exit 1
+          fi
+
+
+      # ------------------------------------------------
+      # 11. Deploy application
       # ------------------------------------------------
 
       - name: Deploy Helm chart
         run: |
+          IMAGE_REPOSITORY=$(echo "${{ inputs.image-uri }}" | cut -d: -f1)
+
+          echo "======================================"
+          echo "DEPLOYMENT INFORMATION"
+          echo "======================================"
+          echo "Helm Release: ${{ inputs.helm-release }}"
+          echo "Helm Chart: ${{ inputs.helm-chart }}"
+          echo "Image Repository: ${IMAGE_REPOSITORY}"
+          echo "Image Tag: ${{ inputs.image-tag }}"
+          echo "======================================"
+
           helm upgrade --install \
             "${{ inputs.helm-release }}" \
             "${{ inputs.helm-chart }}" \
-            -f "${{ inputs.helm-chart }}/prod/values.yaml" \
-            --set image.repository="$(echo '${{ inputs.image-uri }}' | cut -d: -f1)" \
+            -f "${{ inputs.helm-chart }}/values.yaml" \
+            --set image.repository="${IMAGE_REPOSITORY}" \
             --set image.tag="${{ inputs.image-tag }}" \
             --wait \
-            --timeout 2m
+            --timeout 10m
 
 
       # ------------------------------------------------
-      # 11. Verify Helm release
+      # 12. Verify Helm release
       # ------------------------------------------------
 
       - name: Verify Helm release
+        if: always()
         run: |
-          helm list
+          helm list -A
+
+          echo "===== HELM STATUS ====="
+
+          helm status "${{ inputs.helm-release }}" \
+            -n default || true
 
 
       # ------------------------------------------------
-      # 12. Verify Kubernetes resources
+      # 13. Verify Kubernetes resources
       # ------------------------------------------------
 
       - name: Verify application
+        if: always()
         run: |
-          echo "===== PODS ====="
-          kubectl get pods -o wide
 
-          echo "===== SERVICES ====="
-          kubectl get services
+          echo "======================================"
+          echo "PODS"
+          echo "======================================"
 
-          echo "===== DEPLOYMENTS ====="
-          kubectl get deployments
+          kubectl get pods -o wide || true
+
+
+          echo "======================================"
+          echo "SERVICES"
+          echo "======================================"
+
+          kubectl get services || true
+
+
+          echo "======================================"
+          echo "DEPLOYMENTS"
+          echo "======================================"
+
+          kubectl get deployments || true
+
+
+          echo "======================================"
+          echo "INGRESS"
+          echo "======================================"
+
+          kubectl get ingress || true
 
 
       # ------------------------------------------------
-      # 13. Check rollout status
+      # 14. Show events if deployment failed
       # ------------------------------------------------
 
-      # - name: Check deployment rollout
-      #   run: |
-      #     kubectl rollout status deployment/${{ inputs.helm-release }} \
-      #       --timeout=5mj
+      - name: Show Kubernetes events
+        if: failure()
+        run: |
+          kubectl get events \
+            --sort-by=.lastTimestamp || true
