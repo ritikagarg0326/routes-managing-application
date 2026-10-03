@@ -96,7 +96,10 @@ jobs:
           echo "Image tag: ${IMAGE_TAG}"
           echo "Image URI: ${IMAGE_URI}"
 
-
+      - name: Verify CI outputs
+        run: |
+          echo "STEP IMAGE TAG: '${{ steps.image-info.outputs.image-tag }}'"
+          echo "STEP IMAGE URI: '${{ steps.image-info.outputs.image-uri }}'"
       # ------------------------------------------------
       # 7. Build Docker image
       # ------------------------------------------------
