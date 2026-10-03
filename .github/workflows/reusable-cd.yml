@@ -152,11 +152,11 @@ jobs:
           helm upgrade --install \
             "${{ inputs.helm-release }}" \
             "${{ inputs.helm-chart }}" \
-            -f "${{ inputs.helm-chart }}/dev/values.yaml" \
+            -f "${{ inputs.helm-chart }}/prod/values.yaml" \
             --set image.repository="$(echo '${{ inputs.image-uri }}' | cut -d: -f1)" \
             --set image.tag="${{ inputs.image-tag }}" \
             --wait \
-            --timeout 5m
+            --timeout 2m
 
 
       # ------------------------------------------------
