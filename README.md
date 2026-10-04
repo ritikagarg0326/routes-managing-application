@@ -4,7 +4,7 @@ A hands-on **Python Flask logistics application** deployed on **Amazon EKS** wit
 
 The project demonstrates the complete DevOps flow from **source code → container image → registry → Kubernetes deployment → public application → monitoring**.
 
-## 🚀 Application
+##  Application
 
 LogiOps provides:
 
@@ -123,11 +123,11 @@ The pipeline was tested through multiple deployment iterations, including fixing
 
 ## ✅ GitHub Actions Evidence
 
-![GitHub Actions CI/CD success](docs/images/github-actions-workflow-success.png)
+![GitHub Actions CI/CD success](/images/github-actions-workflow-success.png)
 
-![GitHub Actions workflow runs](docs/images/github-actions-runs.png)
+![GitHub Actions workflow runs](/images/github-actions-runs.png)
 
-![CD deployment verification](docs/images/github-actions-cd-verify.png)
+![CD deployment verification](/images/github-actions-cd-verify.png)
 
 ## 🐳 Docker + Amazon ECR
 
@@ -181,7 +181,7 @@ kubectl get deployments
 kubectl get ingress
 ```
 
-![EKS pods and services](docs/images/eks-pods-and-services.png)
+![EKS pods and services](/images/eks-pods-and-services.png)
 
 ## ⛵ Helm
 
@@ -230,7 +230,7 @@ Kubernetes Service
 LogiOps Pod
 ```
 
-![Application running through AWS Load Balancer](docs/images/application-running-on-aws-loadbalancer.png)
+![Application running through AWS Load Balancer](/images/application-running-on-aws-loadbalancer.png)
 
 For the final service design, PostgreSQL is kept internal using `ClusterIP` rather than exposing the database publicly.
 
@@ -290,9 +290,9 @@ Metrics explored include:
 - Kubernetes workload metrics
 - Pod-level resource usage
 
-![Grafana CPU metrics](docs/images/grafana-kubernetes-cpu-metrics.png)
+![Grafana CPU metrics](/images/grafana-kubernetes-cpu-metrics.png)
 
-![Grafana network metrics](docs/images/grafana-kubernetes-network-metrics.png)
+![Grafana network metrics](/images/grafana-kubernetes-network-metrics.png)
 
 ### Observability flow
 
@@ -390,7 +390,7 @@ No AWS credentials are committed to the repository.
 
 For production, GitHub OIDC with an AWS IAM role should replace long-lived credentials.
 
-## 🎯 DevOps Skills Demonstrated
+## DevOps Skills Demonstrated
 
 - Git and GitHub
 - GitHub Actions
@@ -415,34 +415,4 @@ For production, GitHub OIDC with an AWS IAM role should replace long-lived crede
 - Helm troubleshooting
 - Cloud infrastructure troubleshooting
 
-## 🚀 Next Improvements
 
-Planned production-oriented enhancements:
-
-- GitHub OIDC
-- AWS Load Balancer Controller + ALB
-- Route 53 + custom domain
-- ACM HTTPS
-- Horizontal Pod Autoscaler
-- Readiness/liveness probes
-- Alertmanager
-- Fluent Bit + centralized logging
-- OpenSearch/Kibana
-- AWS Secrets Manager / External Secrets
-- Argo CD / GitOps
-- AI-powered Kubernetes observability agent
-- Automated CPU/memory alert investigation
-
-## 💼 Resume / Interview Summary
-
-> Built and deployed a containerized Python Flask logistics platform on Amazon EKS using Docker, Amazon ECR, Helm and GitHub Actions. Implemented reusable CI/CD workflows to build and push SHA-tagged images to ECR, automatically deploy Helm releases to EKS, and verify Kubernetes workloads after deployment. Configured AWS Load Balancing for external application access, IAM/EKS access controls, PostgreSQL services, and Prometheus/Grafana monitoring for Kubernetes resource and network metrics. Troubleshot Kubernetes image, Helm, IAM, service and deployment issues throughout the implementation.
-
-## 📸 Project Evidence
-
-Deployment screenshots are stored under:
-
-```text
-docs/images/
-```
-
-and referenced directly by this README so the repository serves as both the project documentation and visual proof of the implementation.
