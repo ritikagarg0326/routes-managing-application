@@ -4,6 +4,9 @@ A hands-on **Python Flask logistics application** deployed on **Amazon EKS** wit
 
 The project demonstrates the complete DevOps flow from **source code → container image → registry → Kubernetes deployment → public application → monitoring**.
 
+
+![Flow Chart](images/flowchart.png)
+
 ##  Application
 
 LogiOps provides:
@@ -123,11 +126,11 @@ The pipeline was tested through multiple deployment iterations, including fixing
 
 ## ✅ GitHub Actions Evidence
 
-![GitHub Actions CI/CD success](/images/github-actions-workflow-success.png)
+![GitHub Actions CI/CD success](images/github-actions-workflow-success.png)
 
-![GitHub Actions workflow runs](/images/github-actions-runs.png)
+![GitHub Actions workflow runs](images/github-actions-runs.png)
 
-![CD deployment verification](/images/github-actions-cd-verify.png)
+![CD deployment verification](images/github-actions-cd-verify.png)
 
 ## 🐳 Docker + Amazon ECR
 
@@ -181,7 +184,7 @@ kubectl get deployments
 kubectl get ingress
 ```
 
-![EKS pods and services](/images/eks-pods-and-services.png)
+![EKS pods and services](images/eks-pods-and-services.png)
 
 ## ⛵ Helm
 
@@ -230,7 +233,7 @@ Kubernetes Service
 LogiOps Pod
 ```
 
-![Application running through AWS Load Balancer](/images/application-running-on-aws-loadbalancer.png)
+![Application running through AWS Load Balancer](images/application-running-on-aws-loadbalancer.png)
 
 For the final service design, PostgreSQL is kept internal using `ClusterIP` rather than exposing the database publicly.
 
@@ -290,9 +293,9 @@ Metrics explored include:
 - Kubernetes workload metrics
 - Pod-level resource usage
 
-![Grafana CPU metrics](/images/grafana-kubernetes-cpu-metrics.png)
+![Grafana CPU metrics](images/grafana-kubernetes-cpu-metrics.png)
 
-![Grafana network metrics](/images/grafana-kubernetes-network-metrics.png)
+![Grafana network metrics](images/grafana-kubernetes-network-metrics.png)
 
 ### Observability flow
 
