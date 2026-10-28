@@ -105,9 +105,7 @@ The CI workflow:
 
 Example:
 
-```text
-470024785854.dkr.ecr.us-east-1.amazonaws.com/dev/logistics:<git-sha>
-```
+
 
 Using the commit SHA gives traceability between a Git commit and the image deployed to EKS.
 
