@@ -4,7 +4,7 @@ output "vpc_id" {
 }
 
 output "ecr_repository_url" {
-  description = "ECR repository URL"
+  description = "ECR repository URL "
   value       = aws_ecr_repository.logistics.repository_url
 }
 
