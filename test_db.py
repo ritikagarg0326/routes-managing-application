@@ -5,7 +5,7 @@ conn = psycopg.connect(
     port=5432,
     dbname="logistics",
     user="postgres",
-    password="postgres"
+    password="postgre@#$$s"
 )
 
 print("Connected to PostgreSQL! local in desktop")
